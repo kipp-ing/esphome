@@ -2120,6 +2120,7 @@ def test_upload_program_ota_success(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -2159,6 +2160,7 @@ def test_upload_program_ota_encryption_key(
         key,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -2224,6 +2226,39 @@ def test_upload_program_ota_allow_plaintext_upload(
     assert mock_run_ota.call_args.kwargs == {
         "plaintext_fallback": False,
         "allow_plaintext_upload": True,
+        "old_noise_psk": None,
+    }
+
+
+def test_upload_program_ota_old_key_passed_through(
+    mock_run_ota: Mock,
+    mock_get_port_type: Mock,
+    tmp_path: Path,
+) -> None:
+    """The previous key rides along for the retry after a rejected handshake."""
+    setup_core(platform=PLATFORM_ESP32, tmp_path=tmp_path)
+    mock_get_port_type.return_value = "NETWORK"
+    mock_run_ota.return_value = (0, "192.168.1.100")
+
+    key = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
+    old_key = "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA="
+    config = {
+        CONF_OTA: [
+            {
+                CONF_PLATFORM: CONF_ESPHOME,
+                CONF_PORT: 3232,
+                CONF_ENCRYPTION: {CONF_KEY: key, "old_key": old_key},
+            }
+        ]
+    }
+    exit_code, _ = upload_program(config, MockArgs(), ["192.168.1.100"])
+
+    assert exit_code == 0
+    assert mock_run_ota.call_args.args[5] == key
+    assert mock_run_ota.call_args.kwargs == {
+        "plaintext_fallback": False,
+        "allow_plaintext_upload": False,
+        "old_noise_psk": old_key,
     }
 
 
@@ -2233,6 +2268,7 @@ def test_upload_program_ota_allow_plaintext_upload(
         {
             CONF_ENCRYPTION: {
                 CONF_KEY: "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+                "old_key": "AgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICE=",
                 "allow_plaintext_upload": True,
             }
         },
@@ -2266,6 +2302,7 @@ def test_upload_program_ota_prompted_key_is_presented(
     assert mock_run_ota.call_args.kwargs == {
         "plaintext_fallback": False,
         "allow_plaintext_upload": False,
+        "old_noise_psk": None,
     }
 
 
@@ -2611,6 +2648,7 @@ def test_upload_program_ota_api_key_opportunistic(
         key,
         plaintext_fallback=True,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -2642,6 +2680,7 @@ def test_upload_program_ota_no_usable_api_key_stays_plaintext(
     assert mock_run_ota.call_args.kwargs == {
         "plaintext_fallback": False,
         "allow_plaintext_upload": False,
+        "old_noise_psk": None,
     }
 
 
@@ -2703,6 +2742,7 @@ def test_upload_program_ota_with_file_arg(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -2760,6 +2800,7 @@ def test_upload_program_ota_partition_table_with_file_arg(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -2824,6 +2865,7 @@ def test_upload_program_ota_partition_table_mqttip(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -3014,6 +3056,7 @@ def test_upload_program_ota_bootloader_with_file_arg(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -3526,6 +3569,7 @@ def test_upload_program_ota_with_mqtt_resolution(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -3583,6 +3627,7 @@ def test_upload_program_ota_with_mqtt_empty_broker(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
     # Verify warning was logged
     assert "MQTT IP discovery failed" in caplog.text
@@ -5136,6 +5181,7 @@ def test_upload_program_ota_static_ip_with_mqttip(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -5188,6 +5234,7 @@ def test_upload_program_ota_multiple_mqttip_resolves_once(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
@@ -5373,6 +5420,7 @@ def test_upload_program_ota_mqtt_timeout_fallback(
         None,
         plaintext_fallback=False,
         allow_plaintext_upload=False,
+        old_noise_psk=None,
     )
 
 
